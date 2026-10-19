@@ -24,6 +24,7 @@ from app.candidates.schemas import (
     ProfessionalRegistrationRequest,
     ProfessionalRegistrationResponse,
     SkillLinkRequest,
+    SkillSelectionRequest,
 )
 from app.candidates.services import (
     add_certification,
@@ -39,6 +40,7 @@ from app.candidates.services import (
     remove_education,
     remove_experience,
     remove_skill,
+    replace_skills,
     update_certification,
     update_education,
     update_experience,
@@ -186,6 +188,18 @@ def create_skill_link(
 ) -> SkillResponse:
     response.headers["Cache-Control"] = "no-store"
     return _skill_response(add_skill(current_user.id, request, session=session))
+
+
+@router.put("/me/skills", response_model=list[SkillResponse])
+def replace_skill_links(
+    request: SkillSelectionRequest,
+    current_user: Annotated[CurrentUser, Depends(require_candidate)],
+    session: Annotated[Session, Depends(get_session)],
+    response: Response,
+) -> list[SkillResponse]:
+    response.headers["Cache-Control"] = "no-store"
+    skills = replace_skills(current_user.id, request, session=session)
+    return [_skill_response(skill) for skill in skills]
 
 
 @router.delete("/me/skills/{skill_id}", status_code=204, response_class=Response)
