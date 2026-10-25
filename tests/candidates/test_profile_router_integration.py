@@ -80,7 +80,9 @@ def test_patch_is_persisted(client: TestClient, provider: FakeIdentityProvider) 
     assert stored_city() == "Curitiba"
 
 
-@pytest.mark.parametrize("field", ["full_name", "phone"])
+@pytest.mark.parametrize(
+    "field", ["full_name", "phone", "accepts_automatic_application"]
+)
 def test_required_field_cannot_be_cleared(
     client: TestClient, provider: FakeIdentityProvider, field: str
 ) -> None:
@@ -197,3 +199,50 @@ def test_profile_has_no_photo_url(
 
     assert response.status_code == 200
     assert "photo_url" not in response.json()
+
+
+def test_automatic_application_starts_off_and_can_be_toggled(
+    client: TestClient, provider: FakeIdentityProvider
+) -> None:
+    add_candidate()
+
+    initial = client.get(PROFILE_PATH, headers=AUTH)
+    turned_on = client.patch(
+        PROFILE_PATH, json={"accepts_automatic_application": True}, headers=AUTH
+    )
+    fetched = client.get(PROFILE_PATH, headers=AUTH)
+    turned_off = client.patch(
+        PROFILE_PATH, json={"accepts_automatic_application": False}, headers=AUTH
+    )
+
+    assert initial.json()["accepts_automatic_application"] is False
+    assert turned_on.status_code == 200
+    assert turned_on.json()["accepts_automatic_application"] is True
+    assert fetched.json()["accepts_automatic_application"] is True
+    assert turned_off.json()["accepts_automatic_application"] is False
+
+
+def test_other_fields_leave_the_automatic_application_choice_alone(
+    client: TestClient, provider: FakeIdentityProvider
+) -> None:
+    add_candidate()
+    client.patch(
+        PROFILE_PATH, json={"accepts_automatic_application": True}, headers=AUTH
+    )
+
+    response = client.patch(PROFILE_PATH, json={"city": "Curitiba"}, headers=AUTH)
+
+    assert response.json()["accepts_automatic_application"] is True
+
+
+def test_automatic_application_must_be_a_boolean(
+    client: TestClient, provider: FakeIdentityProvider
+) -> None:
+    add_candidate()
+
+    response = client.patch(
+        PROFILE_PATH, json={"accepts_automatic_application": "maybe"}, headers=AUTH
+    )
+
+    assert response.status_code == 422
+    assert "body.accepts_automatic_application" in response.json()["errors"]
