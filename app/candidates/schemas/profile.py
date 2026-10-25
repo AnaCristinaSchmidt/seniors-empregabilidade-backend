@@ -70,7 +70,7 @@ class ProfessionalProfileResponse(BaseModel):
     accepts_automatic_application: bool = Field(
         description=(
             "Whether the professional allows the platform to apply on their behalf "
-            "to compatible jobs (US-20). Off until they turn it on."
+            "to compatible jobs (US-20). They can turn it off at any time."
         )
     )
     experiences: list[ExperienceResponse]

@@ -201,25 +201,28 @@ def test_profile_has_no_photo_url(
     assert "photo_url" not in response.json()
 
 
-def test_automatic_application_starts_off_and_can_be_toggled(
+def test_automatic_application_can_be_turned_off_and_on(
     client: TestClient, provider: FakeIdentityProvider
 ) -> None:
+    # The initial value is the column default, which US-20-T04 turns on, so
+    # the test only relies on what the PATCH stores.
     add_candidate()
 
-    initial = client.get(PROFILE_PATH, headers=AUTH)
-    turned_on = client.patch(
-        PROFILE_PATH, json={"accepts_automatic_application": True}, headers=AUTH
-    )
-    fetched = client.get(PROFILE_PATH, headers=AUTH)
     turned_off = client.patch(
         PROFILE_PATH, json={"accepts_automatic_application": False}, headers=AUTH
     )
+    fetched_off = client.get(PROFILE_PATH, headers=AUTH)
+    turned_on = client.patch(
+        PROFILE_PATH, json={"accepts_automatic_application": True}, headers=AUTH
+    )
+    fetched_on = client.get(PROFILE_PATH, headers=AUTH)
 
-    assert initial.json()["accepts_automatic_application"] is False
+    assert turned_off.status_code == 200
+    assert turned_off.json()["accepts_automatic_application"] is False
+    assert fetched_off.json()["accepts_automatic_application"] is False
     assert turned_on.status_code == 200
     assert turned_on.json()["accepts_automatic_application"] is True
-    assert fetched.json()["accepts_automatic_application"] is True
-    assert turned_off.json()["accepts_automatic_application"] is False
+    assert fetched_on.json()["accepts_automatic_application"] is True
 
 
 def test_other_fields_leave_the_automatic_application_choice_alone(

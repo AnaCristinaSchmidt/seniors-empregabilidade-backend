@@ -176,8 +176,9 @@ applications only and adds `automatic_match_count`.
 
 `GET /api/v1/professionals/me` returns `accepts_automatic_application`, and
 `PATCH /api/v1/professionals/me` accepts it as `true` or `false` (`null` is
-rejected). It starts `false`. It only records the professional's choice: no
-application is created from it yet; that is the job of US-20-T04.
+rejected). It starts with the column default, which US-20-T04 turns on, and the
+professional can turn it off at any time. US-20-T04 reads it to decide who is
+applied automatically; turning it off stops new applications from the next cycle.
 
 ## Failures
 
